@@ -7,7 +7,7 @@ from aiogram.client.default import DefaultBotProperties
 
 # ඔබගේ Bot Token සහ Channel ID මෙහි ඇතුළත් කරන්න
 BOT_TOKEN = '8623156099:AAEO_Qtj9Br3u_Okwd9gO53DxkuPiQu0h8I'
-CHANNEL_ID = '@1003131855993'
+CHANNEL_ID = '-1003131855993'
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
 dp = Dispatcher()
