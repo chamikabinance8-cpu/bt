@@ -32,15 +32,29 @@ dp = Dispatcher()
 
 # --- සාමාන්‍ය ලින්ක් එක GPLinks හරහා Short කරන Function එක ---
 async def get_shortened_url(long_url):
-    api_link = f"{SHORTENER_API_URL}?api={SHORTENER_API_TOKEN}&url={long_url}"
+    # API URL එක .in වෙනුවට .com ලෙස ලබා දීම
+    api_link = 'https://gplinks.com/api' 
+    
+    # Params ලෙස ලබාදීමෙන් ලින්ක් එක නිවැරදිව Encode වේ
+    params = {
+        'api': SHORTENER_API_TOKEN,
+        'url': long_url
+    }
+    
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(api_link, timeout=10) as response:
+            # URL එක සහ Token එක නිවැරදිව වෙන් කර යැවීම
+            async with session.get(api_link, params=params, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
+                    
                     # API එකෙන් සාර්ථකව short link එක ලැබුණොත්
                     if data.get('status') == 'success' and 'shortenedUrl' in data:
                         return data['shortenedUrl']
+                    else:
+                        print(f"API Error message: {data}")
+                else:
+                    print(f"Server Error Code: {response.status}")
     except Exception as e:
         print(f"Error shortening URL: {e}")
     
