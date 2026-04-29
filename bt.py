@@ -14,28 +14,24 @@ from aiogram.client.default import DefaultBotProperties
 BOT_TOKEN = '8623156099:AAEO_Qtj9Br3u_Okwd9gO53DxkuPiQu0h8I' 
 
 # ඔබේ Channel එකේ නිවැරදි ඉලක්කම් ID එක
-CHANNEL_ID = '-1003880058993' 
+CHANNEL_ID = '-1003968067818' 
 
-# ඔබගේ පුද්ගලික Telegram User ID එක (වෙනත් අයට Bot භාවිතා කිරීම වැළැක්වීමට)
+# ඔබගේ පුද්ගලික Telegram User ID එක
 MY_USER_ID = 6221106415  
 
 # ==========================================
-# 💰 GPLinks API සැකසුම්
+# 💰 ShrinkMe.io API සැකසුම්
 # ==========================================
-SHORTENER_API_URL = 'https://gplinks.in/api'
-SHORTENER_API_TOKEN = '9406e2cdad7b06ac4101f8d75d8e67f82cd9882e'
+SHORTENER_API_URL = 'https://shrinkme.io/api'
+SHORTENER_API_TOKEN = '3711789a1054f6a3b9350ea2573b848f0fe9c14a'
 
 # ==========================================
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
 dp = Dispatcher()
 
-# --- සාමාන්‍ය ලින්ක් එක GPLinks හරහා Short කරන Function එක ---
+# --- සාමාන්‍ය ලින්ක් එක ShrinkMe හරහා Short කරන Function එක ---
 async def get_shortened_url(long_url):
-    # API URL එක .in වෙනුවට .com ලෙස ලබා දීම
-    api_link = 'https://gplinks.com/api' 
-    
-    # Params ලෙස ලබාදීමෙන් ලින්ක් එක නිවැරදිව Encode වේ
     params = {
         'api': SHORTENER_API_TOKEN,
         'url': long_url
@@ -43,8 +39,8 @@ async def get_shortened_url(long_url):
     
     try:
         async with aiohttp.ClientSession() as session:
-            # URL එක සහ Token එක නිවැරදිව වෙන් කර යැවීම
-            async with session.get(api_link, params=params, timeout=10) as response:
+            # URL එක සහ Token එක නිවැරදිව යැවීම
+            async with session.get(SHORTENER_API_URL, params=params, timeout=10) as response:
                 if response.status == 200:
                     data = await response.json()
                     
@@ -69,7 +65,7 @@ async def send_welcome(message: types.Message):
         return
         
     welcome_message = (
-        "🚀 *Welcome to AutoPost Pro (GPLinks Mode)*\n\n"
+        "🚀 *Welcome to AutoPost Pro (ShrinkMe.io Mode)*\n\n"
         "Send me your post details in this format:\n\n"
         "Your main message text goes here. You can write multiple lines.\n"
         "---\n"
@@ -93,7 +89,7 @@ async def process_post_data(message: types.Message):
     post_text = parts[0].strip()
     buttons_section = parts[1].strip()
 
-    loading_msg = await message.reply("⏳ *Shortening URLs via GPLinks and preparing post...*")
+    loading_msg = await message.reply("⏳ *Shortening URLs via ShrinkMe.io and preparing post...*")
     builder = InlineKeyboardBuilder()
     valid_buttons = 0
 
@@ -103,7 +99,7 @@ async def process_post_data(message: types.Message):
             btn_text, url = [item.strip() for item in line.split('|', 1)]
             
             if url.startswith("http"):
-                # ලින්ක් එක GPLinks API එකට යැවීම
+                # ලින්ක් එක ShrinkMe API එකට යැවීම
                 short_url = await get_shortened_url(url) 
                 
                 builder.button(text=btn_text, url=short_url)
@@ -123,14 +119,14 @@ async def process_post_data(message: types.Message):
             text=post_text, 
             reply_markup=builder.as_markup()
         )
-        await loading_msg.edit_text("✅ *Post successfully published with GPLinks! 💰*")
+        await loading_msg.edit_text("✅ *Post successfully published with ShrinkMe! 💰*")
         
     except Exception as e:
         await loading_msg.edit_text(f"❌ *Error publishing post:* \n`{str(e)}`\n\nMake sure the bot is still an Admin in the channel.")
 
 # --- Bot Run කිරීම ---
 async def main():
-    print("💰 GPLinks Ad-Enabled Bot is running...")
+    print("💰 ShrinkMe Ad-Enabled Bot is running...")
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
