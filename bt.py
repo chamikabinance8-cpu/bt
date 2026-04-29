@@ -14,7 +14,7 @@ from aiogram.client.default import DefaultBotProperties
 BOT_TOKEN = '8623156099:AAEO_Qtj9Br3u_Okwd9gO53DxkuPiQu0h8I' 
 
 # ඔබේ Channel එකේ නිවැරදි ඉලක්කම් ID එක
-CHANNEL_ID = '-1003968067818' 
+CHANNEL_ID = '-1003880058993' 
 
 # ඔබගේ පුද්ගලික Telegram User ID එක
 MY_USER_ID = 6221106415  
