@@ -1,35 +1,76 @@
 import asyncio
+import aiohttp
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.client.default import DefaultBotProperties
 
-# ඔබගේ Bot Token සහ Channel ID මෙහි ඇතුළත් කරන්න
-BOT_TOKEN = '8623156099:AAEO_Qtj9Br3u_Okwd9gO53DxkuPiQu0h8I'
-CHANNEL_ID = '-1003131855993'
+# ==========================================
+# ⚙️ ඔබේ ප්‍රධාන සැකසුම්
+# ==========================================
+
+# @BotFather ගෙන් ලබාගත් ඔබගේ අලුත් Bot Token එක මෙහි දාන්න
+BOT_TOKEN = '8623156099:AAEO_Qtj9Br3u_Okwd9gO53DxkuPiQu0h8I' 
+
+# ඔබේ Channel එකේ නිවැරදි ඉලක්කම් ID එක
+CHANNEL_ID = '-1003968067818' 
+
+# ඔබගේ පුද්ගලික Telegram User ID එක (වෙනත් අයට Bot භාවිතා කිරීම වැළැක්වීමට)
+MY_USER_ID = 6221106415  
+
+# ==========================================
+# 💰 GPLinks API සැකසුම්
+# ==========================================
+SHORTENER_API_URL = 'https://gplinks.in/api'
+SHORTENER_API_TOKEN = '9406e2cdad7b06ac4101f8d75d8e67f82cd9882e'
+
+# ==========================================
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
 dp = Dispatcher()
 
-# Bot Start Command
+# --- සාමාන්‍ය ලින්ක් එක GPLinks හරහා Short කරන Function එක ---
+async def get_shortened_url(long_url):
+    api_link = f"{SHORTENER_API_URL}?api={SHORTENER_API_TOKEN}&url={long_url}"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api_link, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    # API එකෙන් සාර්ථකව short link එක ලැබුණොත්
+                    if data.get('status') == 'success' and 'shortenedUrl' in data:
+                        return data['shortenedUrl']
+    except Exception as e:
+        print(f"Error shortening URL: {e}")
+    
+    # දෝෂයක් ආවොත් මුල් ලින්ක් එකම return කරයි
+    return long_url
+
+# --- Bot Start Command ---
 @dp.message(CommandStart())
 async def send_welcome(message: types.Message):
+    if message.from_user.id != MY_USER_ID:
+        await message.reply("⚠️ *Access Denied:* You are not authorized to use this bot.")
+        return
+        
     welcome_message = (
-        "🚀 *Welcome to AutoPost Pro*\n\n"
+        "🚀 *Welcome to AutoPost Pro (GPLinks Mode)*\n\n"
         "Send me your post details in this format:\n\n"
-        "Your main message text goes here.\n"
+        "Your main message text goes here. You can write multiple lines.\n"
         "---\n"
         "Button 1 | https://link1.com\n"
-        "Button 2 | https://link2.com\n"
-        "Button 3 | https://link3.com"
+        "Button 2 | https://link2.com"
     )
     await message.reply(welcome_message)
 
-# Handle incoming text messages
+# --- පණිවිඩ සැකසීම, ලින්ක් Short කිරීම සහ යැවීම ---
 @dp.message(F.text)
 async def process_post_data(message: types.Message):
-    # Text එක සහ Buttons වෙන් කර ගැනීම
+    # ආරක්ෂක පරීක්ෂාව
+    if message.from_user.id != MY_USER_ID:
+        return 
+    
     if "---" not in message.text:
         await message.reply("⚠️ *Invalid Format!*\n\nPlease use `---` to separate your text and buttons.")
         return
@@ -38,42 +79,44 @@ async def process_post_data(message: types.Message):
     post_text = parts[0].strip()
     buttons_section = parts[1].strip()
 
-    loading_msg = await message.reply("⏳ *Processing buttons and preparing post...*")
+    loading_msg = await message.reply("⏳ *Shortening URLs via GPLinks and preparing post...*")
     builder = InlineKeyboardBuilder()
     valid_buttons = 0
 
-    # සෑම පේළියක්ම පරීක්ෂා කර බටන් නිර්මාණය කිරීම
+    # බටන් නිර්මාණය කිරීම සහ ලින්ක් Short කිරීම
     for line in buttons_section.split('\n'):
         if '|' in line:
             btn_text, url = [item.strip() for item in line.split('|', 1)]
             
             if url.startswith("http"):
-                builder.button(text=btn_text, url=url)
+                # ලින්ක් එක GPLinks API එකට යැවීම
+                short_url = await get_shortened_url(url) 
+                
+                builder.button(text=btn_text, url=short_url)
                 valid_buttons += 1
 
     if valid_buttons == 0:
         await loading_msg.edit_text("❌ *Error:* No valid buttons found. Check your links.")
         return
 
-    # බටන් පෙළගස්වන ආකාරය (1 = එක පේළියකට එක බටන් එක බැගින්)
-    # ඔබට එක පේළියට බටන් 2ක් අවශ්‍ය නම් මෙය builder.adjust(2) ලෙස වෙනස් කරන්න.
+    # බටන් එකක් යට එකක් පෙළගැස්වීම
     builder.adjust(1)
 
+    # Channel එකට පෝස්ට් කිරීම
     try:
-        # Channel එකට යැවීම
         await bot.send_message(
             chat_id=CHANNEL_ID, 
             text=post_text, 
             reply_markup=builder.as_markup()
         )
-        await loading_msg.edit_text("✅ *Post successfully published with multiple buttons!*")
+        await loading_msg.edit_text("✅ *Post successfully published with GPLinks! 💰*")
         
     except Exception as e:
-        await loading_msg.edit_text(f"❌ *Error publishing post:* Check if the bot is admin in the channel.")
+        await loading_msg.edit_text(f"❌ *Error publishing post:* \n`{str(e)}`\n\nMake sure the bot is still an Admin in the channel.")
 
-# Bot Run කිරීම
+# --- Bot Run කිරීම ---
 async def main():
-    print("Bot is running safely...")
+    print("💰 GPLinks Ad-Enabled Bot is running...")
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
