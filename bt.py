@@ -17,7 +17,7 @@ BOT_TOKEN = '8623156099:AAEO_Qtj9Br3u_Okwd9gO53DxkuPiQu0h8I'
 CHANNEL_ID = '-1003880058993' 
 
 # ඔබගේ පුද්ගලික Telegram User ID එක
-MY_USER_ID = 6221106415  
+MY_USER_ID = 1136684749  
 
 # ==========================================
 # 💰 ShrinkMe.io API සැකසුම්
